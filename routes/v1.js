@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { verifyToken } = require("./middlewares");
-const { Domain, User } = require("../models");
+const { Domain, User, Post, Hashtag } = require("../models");
 const router = require("express").Router();
 
 router.post("/token", async (req, res) => {
@@ -48,4 +48,45 @@ router.get("/test", verifyToken, (req, res) => {
   res.json(req.decoded);
 });
 
+router.get("/posts/my", verifyToken, (req, res) => {
+  Post.findAll({
+    where: { UserId: req.decoded.id },
+  })
+    .then((posts) => {
+      return res.json({
+        code: 200,
+        payload: posts,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({
+        code: 500,
+        message: "server error",
+      });
+    });
+});
+router.get("/posts/hashtag/:title", verifyToken, async (req, res) => {
+  try {
+    const hashtag = await Hashtag.findOne({
+      where: { title: req.params.title },
+    });
+    if (!hashtag) {
+      return res.status(404).json({
+        code: 404,
+        message: "no results",
+      });
+    }
+    const posts = await hashtag.getPosts();
+    return res.json({
+      code: 200,
+      payload: posts,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      code: 500,
+    });
+  }
+});
 module.exports = router;
