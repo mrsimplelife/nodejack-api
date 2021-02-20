@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
-const { verifyToken, deprecated } = require("./middlewares");
+const { verifyToken, apiLimiter, speedLimiter } = require("./middlewares");
 const { Domain, User, Post, Hashtag } = require("../models");
 const router = require("express").Router();
-router.use(deprecated);
+router.use(speedLimiter);
+router.use(apiLimiter);
 router.post("/token", async (req, res) => {
   const { clientSecret } = req.body;
   try {
