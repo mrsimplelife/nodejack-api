@@ -2,6 +2,23 @@ const jwt = require("jsonwebtoken");
 const { verifyToken, apiLimiter, speedLimiter } = require("./middlewares");
 const { Domain, User, Post, Hashtag } = require("../models");
 const router = require("express").Router();
+const cors = require("cors");
+const url = require("url");
+
+router.use(async (req, res, next) => {
+  const domain = await Domain.findOne({
+    // where: { host: url.parse(req.get("origin"))?.host },
+    where: { host: url.parse(req.get("origin")).host },
+  });
+  if (domain) {
+    cors({
+      origin: true,
+      credentials: true,
+    })(req, res, next);
+  } else {
+    next();
+  }
+});
 router.use(speedLimiter);
 router.use(apiLimiter);
 router.post("/token", async (req, res) => {
